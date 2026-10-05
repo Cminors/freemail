@@ -1,42 +1,72 @@
-name = "mailfree"
-# name = "mail-exhibit"
+name = "freemail"
 main = "src/server.js"
 compatibility_date = "2024-01-01"
-keep_vars=true
 
-# D1 数据库绑定
+# 保留 Cloudflare Dashboard 中已经配置好的环境变量和 Secrets
+keep_vars = true
+
+# 不启用默认 workers.dev 地址
+# 继续使用你现在的自定义域名
+workers_dev = false
+preview_urls = false
+
+
+# =========================================================
+# D1 数据库
+# =========================================================
+
 [[d1_databases]]
 binding = "TEMP_MAIL_DB"
-database_name = "mail_free_db" #你的d1数据库名称
-database_id = "b6711963-dd4b-4071-a531-512317880c19" # 你的database_id
-# 登录会话过期时间（单位：天，默认7天）
-# 环境变量
-[vars]
-# FORWARD_RULES="[{"prefix":"vip","email":"a@example.com"},{"prefix":"*","email":"example@qq.com"}]"
-ADMIN_NAME=""
-ADMIN_PASSWORD=""
-GUEST_PASSWORD="guest"
-JWT_TOKEN="dfvhluhdaslufhvdv"
-JWT_TOKENGUEST_PASSWORD="dfsfsfxzcv"
-SESSION_EXPIRE_DAYS="365"
-MAIL_DOMAIN="你的域名列表"
-RESEND_API_KEY="RESEND发件密钥"
-SENDFLARE_API_KEY="SENDFLARE发件密钥"
-CYBERPERSONS_API_KEY="CYBERPERSONS发件密钥"
+database_name = "mail_free_db"
+database_id = "edbababc-5f57-434c-a054-4ae8e61ba81c"
 
 
-# 静态资源目录（Workers + Assets）
-[assets]
-directory = "public"
-# 显式指定绑定名，确保在 Worker 中通过 env.ASSETS 可用
-binding = "ASSETS"
+# =========================================================
+# R2 存储桶
+# =========================================================
 
-
-# R2 存储桶绑定（用于保存完整 EML 内容）
 [[r2_buckets]]
 binding = "MAIL_EML"
 bucket_name = "mail-eml"
 
-# wrangler.toml (wrangler v3.88.0^) 日志服务
-# [observability.logs]
-# enabled = true
+
+# =========================================================
+# 静态资源
+# =========================================================
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+
+# =========================================================
+# Workers Logs
+# =========================================================
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+
+
+# =========================================================
+# 定时任务
+# Cloudflare Cron 使用 UTC
+# UTC 16:00 = 北京时间第二天 00:00
+# =========================================================
+
+[triggers]
+crons = ["0 16 * * *"]
+
+
+# =========================================================
+# 自定义域名
+# =========================================================
+
+[[routes]]
+pattern = "mail.chreey.us.kg"
+zone_name = "chreey.us.kg"
+custom_domain = true
